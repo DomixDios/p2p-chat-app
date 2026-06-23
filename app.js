@@ -51,25 +51,50 @@ class App {
       this.ui.showToast('Nombre actualizado', 'success');
     };
 
-    this.ui.onMicToggle = (active) => {
+    this.ui.onMicToggle = async (active) => {
       this.isMicActive = active;
-      this.peerManager.toggleMic(active);
+      if (active && !this.peerManager.localStream) {
+        const stream = await this.peerManager.startLocalMedia();
+        if (stream) {
+          // Solo audio al inicio, desactivar video
+          this.peerManager.toggleCam(false);
+          this.isCamActive = false;
+          this.ui.btnCam.dataset.active = 'false';
+          this.ui.setLocalStream(stream);
+          for (const peerId of this.peerManager.getPeerList()) {
+            this.peerManager.callPeer(peerId);
+          }
+        } else {
+          this.isMicActive = false;
+          this.ui.btnMic.dataset.active = 'false';
+          return;
+        }
+      } else {
+        this.peerManager.toggleMic(active);
+      }
       this.ui.showToast(active ? 'Micrófono activado' : 'Micrófono silenciado', 'info');
     };
 
     this.ui.onCamToggle = async (active) => {
       this.isCamActive = active;
       if (active) {
-        const stream = await this.peerManager.startLocalMedia();
-        if (stream) {
-          this.ui.setLocalStream(stream);
-          for (const peerId of this.peerManager.getPeerList()) {
-            this.peerManager.callPeer(peerId);
+        if (!this.peerManager.localStream) {
+          const stream = await this.peerManager.startLocalMedia();
+          if (stream) {
+            this.ui.setLocalStream(stream);
+            this.peerManager.toggleMic(true);
+            this.isMicActive = true;
+            this.ui.btnMic.dataset.active = 'true';
+          } else {
+            this.isCamActive = false;
+            this.ui.btnCam.dataset.active = 'false';
+            return;
           }
         } else {
-          this.ui.isCamActive = false;
-          this.ui.btnCam.dataset.active = 'false';
-          return;
+          this.peerManager.toggleCam(true);
+        }
+        for (const peerId of this.peerManager.getPeerList()) {
+          this.peerManager.callPeer(peerId);
         }
       } else {
         this.peerManager.toggleCam(false);

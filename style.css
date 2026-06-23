@@ -375,12 +375,16 @@ body {
   text-align: center;
 }
 
-/* ----- Controles multimedia ----- */
-.media-controls {
+/* ----- Media Bar (siempre visible) ----- */
+.media-bar {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
-  padding: 8px 0;
+  align-items: center;
+  padding: 8px 16px;
+  margin: 0 4px;
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 .ctrl-btn {
@@ -388,6 +392,22 @@ body {
   height: 44px;
   border-radius: 50%;
   padding: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.ctrl-btn:hover {
+  background: var(--glass-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
 }
 
 .ctrl-btn[data-active="true"] {
@@ -395,6 +415,12 @@ body {
   border-color: var(--accent);
   color: #fff;
   box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.ctrl-btn[data-active="true"]:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
 }
 
 .ctrl-btn[data-active="true"]:hover {
@@ -726,10 +752,29 @@ body {
     padding-top: 56px;
     padding-bottom: 60px;
     height: 100vh;
+    gap: 4px;
   }
 
   .video-grid {
     grid-template-columns: 1fr;
+  }
+
+  .media-bar {
+    gap: 6px;
+    padding: 6px 12px;
+    margin: 0;
+    border-radius: 0;
+    background: var(--glass-bg);
+  }
+
+  .media-bar .ctrl-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .media-bar .ctrl-btn svg {
+    width: 16px;
+    height: 16px;
   }
 
   .chat-section {
@@ -742,11 +787,6 @@ body {
 
   .chat-input {
     padding: 8px 12px;
-  }
-
-  .media-controls .ctrl-btn {
-    width: 40px;
-    height: 40px;
   }
 }
 
