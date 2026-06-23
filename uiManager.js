@@ -1,59 +1,50 @@
-/**
- * uiManager.js — Manejo del DOM y eventos de UI
- */
-
 export class UIManager {
   constructor() {
-    // Sidebars
     this.sidebarLeft = document.getElementById('sidebarLeft');
     this.sidebarRight = document.getElementById('sidebarRight');
     this.overlay = document.getElementById('overlay');
     this.btnHamburger = document.getElementById('btnHamburger');
 
-    // Rooms
     this.roomList = document.getElementById('roomList');
     this.btnCreateRoom = document.getElementById('btnCreateRoom');
     this.currentRoomId = document.getElementById('currentRoomId');
 
-    // Users
     this.userList = document.getElementById('userList');
     this.userCount = document.getElementById('userCount');
     this.myPeerId = document.getElementById('myPeerId');
 
-    // Media controls
     this.btnMic = document.getElementById('btnMic');
     this.btnCam = document.getElementById('btnCam');
     this.btnScreen = document.getElementById('btnScreen');
 
-    // Theme
     this.btnTheme = document.getElementById('btnTheme');
 
-    // Video
     this.videoGrid = document.getElementById('videoGrid');
     this.localVideo = document.getElementById('localVideo');
 
-    // Chat
     this.chatMessages = document.getElementById('chatMessages');
     this.chatForm = document.getElementById('chatForm');
     this.chatInput = document.getElementById('chatInput');
 
-    // Invite
     this.btnInvite = document.getElementById('btnInvite');
-
-    // Toast
     this.toastContainer = document.getElementById('toastContainer');
 
-    // Callbacks to wire from app.js
-    this.onRoomSelect = null;     // (roomId: string) => void
-    this.onRoomDelete = null;     // (roomId: string) => void
-    this.onCreateRoom = null;     // () => void
-    this.onThemeToggle = null;    // () => void
-    this.onMicToggle = null;      // (active: boolean) => void
-    this.onCamToggle = null;      // (active: boolean) => void
-    this.onScreenToggle = null;   // (active: boolean) => void
-    this.onSendMessage = null;    // (text: string) => void
-    this.onHamburgerToggle = null; // (open: boolean) => void
-    this.onUserClick = null;      // (peerId: string) => void
+    this.usernameInput = document.getElementById('usernameInput');
+    this.usernameDisplay = document.getElementById('usernameDisplay');
+    this.btnEditUsername = document.getElementById('btnEditUsername');
+
+    this.mobileNav = document.getElementById('mobileNav');
+
+    this.onRoomSelect = null;
+    this.onRoomDelete = null;
+    this.onCreateRoom = null;
+    this.onThemeToggle = null;
+    this.onMicToggle = null;
+    this.onCamToggle = null;
+    this.onScreenToggle = null;
+    this.onSendMessage = null;
+    this.onUserClick = null;
+    this.onUsernameChange = null;
 
     this.isMicActive = false;
     this.isCamActive = false;
@@ -61,29 +52,23 @@ export class UIManager {
     this.isSidebarLeftOpen = false;
     this.isSidebarRightOpen = false;
 
+    this.remoteVideoLabels = new Map();
+
     this._bindEvents();
   }
 
   _bindEvents() {
-    // Crear sala
     this.btnCreateRoom.addEventListener('click', () => {
       if (this.onCreateRoom) this.onCreateRoom();
     });
 
-    // Tema
     this.btnTheme.addEventListener('click', () => {
       if (this.onThemeToggle) this.onThemeToggle();
     });
 
-    // Controles multimedia
     this.btnMic.addEventListener('click', () => {
       this.isMicActive = !this.isMicActive;
       this.btnMic.dataset.active = String(this.isMicActive);
-      if (this.isMicActive) {
-        this.btnMic.classList.add('glow');
-      } else {
-        this.btnMic.classList.remove('glow');
-      }
       if (this.onMicToggle) this.onMicToggle(this.isMicActive);
     });
 
@@ -99,7 +84,6 @@ export class UIManager {
       if (this.onScreenToggle) this.onScreenToggle(this.isScreenActive);
     });
 
-    // Chat
     this.chatForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const text = this.chatInput.value.trim();
@@ -108,27 +92,21 @@ export class UIManager {
       if (this.onSendMessage) this.onSendMessage(text);
     });
 
-    // Hamburguesa
     this.btnHamburger.addEventListener('click', () => {
       this.toggleSidebarLeft();
     });
 
-    // Overlay
     this.overlay.addEventListener('click', () => {
       this.closeAllSidebars();
     });
 
-    // Cerrar sidebars con Escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') this.closeAllSidebars();
     });
 
-    // Delegación de eventos en room list
     this.roomList.addEventListener('click', (e) => {
       const item = e.target.closest('.room-item');
       if (!item) return;
-
-      // Botón eliminar
       const deleteBtn = e.target.closest('.room-delete');
       if (deleteBtn) {
         const roomId = deleteBtn.dataset.room;
@@ -136,12 +114,10 @@ export class UIManager {
         if (this.onRoomDelete) this.onRoomDelete(roomId);
         return;
       }
-
       const roomId = item.dataset.room;
       if (this.onRoomSelect) this.onRoomSelect(roomId);
     });
 
-    // Delegación en user list para hacer clic y llamar
     this.userList.addEventListener('click', (e) => {
       const item = e.target.closest('.user-item');
       if (!item || item.classList.contains('own')) return;
@@ -149,28 +125,75 @@ export class UIManager {
       if (peerId && this.onUserClick) this.onUserClick(peerId);
     });
 
-    // Invite: copiar enlace
     if (this.btnInvite) {
       this.btnInvite.addEventListener('click', () => this._copyInviteLink());
     }
 
-    // Copy ID
     this.btnCopyId = document.getElementById('btnCopyId');
     if (this.btnCopyId) {
       this.btnCopyId.addEventListener('click', () => this._copyMyId());
     }
 
-    // Responsive: cerrar sidebars al redimensionar
+    if (this.btnEditUsername && this.usernameInput) {
+      this.btnEditUsername.addEventListener('click', () => this._toggleUsernameEdit());
+      this.usernameInput.addEventListener('blur', () => this._saveUsername());
+      this.usernameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.usernameInput.blur();
+        }
+      });
+    }
+
+    if (this.mobileNav) {
+      this.mobileNav.addEventListener('click', (e) => {
+        const btn = e.target.closest('.mob-nav-btn');
+        if (!btn) return;
+        const view = btn.dataset.view;
+        document.querySelectorAll('.mob-nav-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (view === 'rooms') {
+          this.closeAllSidebars();
+          this.toggleSidebarLeft();
+        } else if (view === 'users') {
+          this.closeAllSidebars();
+          this.openSidebarRight();
+        } else if (view === 'chat') {
+          this.closeAllSidebars();
+          this.chatInput.focus();
+        }
+      });
+    }
+
     window.addEventListener('resize', () => {
       if (window.innerWidth > 768) {
         this.closeAllSidebars();
+        document.querySelectorAll('.mob-nav-btn').forEach((b) => b.classList.remove('active'));
       }
     });
   }
 
+  _toggleUsernameEdit() {
+    if (!this.usernameInput || !this.usernameDisplay) return;
+    const editing = this.usernameInput.style.display !== 'none';
+    this.usernameInput.style.display = editing ? 'none' : 'block';
+    this.usernameDisplay.style.display = editing ? 'block' : 'none';
+    if (!editing) {
+      this.usernameInput.focus();
+      this.usernameInput.select();
+    }
+  }
+
+  _saveUsername() {
+    const name = this.usernameInput.value.trim();
+    this.usernameDisplay.textContent = name || 'Sin nombre';
+    this.usernameDisplay.style.display = 'block';
+    this.usernameInput.style.display = 'none';
+    if (this.onUsernameChange) this.onUsernameChange(name);
+  }
+
   _copyInviteLink() {
-    const url = window.location.href;
-    this._copyText(url, 'Enlace de invitación copiado');
+    this._copyText(window.location.href, 'Enlace de invitación copiado');
   }
 
   _copyMyId() {
@@ -194,7 +217,7 @@ export class UIManager {
     }
   }
 
-  _fallbackCopy(text, successMsg = 'Copiado') {
+  _fallbackCopy(text, successMsg) {
     const ta = document.createElement('textarea');
     ta.value = text;
     ta.style.position = 'fixed';
@@ -234,24 +257,21 @@ export class UIManager {
     this.overlay.classList.remove('visible');
   }
 
-  // ───────── Temas ────────
+  // ──────── Tema ────────
 
-  /**
-   * Aplica el tema al documento y actualiza el icono del botón.
-   * @param {'dark' | 'light'} mode
-   */
   applyTheme(mode) {
-    const isDark = mode === 'dark';
-    document.documentElement.classList.toggle('light-theme', !isDark);
+    document.documentElement.classList.toggle('light-theme', mode === 'light');
+  }
+
+  // ──────── Username ────────
+
+  setUsername(name) {
+    if (this.usernameInput) this.usernameInput.value = name;
+    if (this.usernameDisplay) this.usernameDisplay.textContent = name || 'Sin nombre';
   }
 
   // ──────── Salas ────────
 
-  /**
-   * Renderiza la lista de salas guardadas.
-   * @param {string[]} rooms
-   * @param {string|null} currentRoom
-   */
   renderRoomList(rooms, currentRoom) {
     this.roomList.innerHTML = rooms
       .map(
@@ -269,36 +289,31 @@ export class UIManager {
       .join('');
   }
 
-  /**
-   * Actualiza el badge de sala actual.
-   * @param {string} roomId
-   */
   setCurrentRoom(roomId) {
     this.currentRoomId.textContent = roomId || '—';
   }
 
   // ──────── Usuarios ────────
 
-  /**
-   * Renderiza la lista de usuarios conectados.
-   * @param {string[]} peerIds
-   */
-  renderUserList(peerIds) {
+  renderUserList(peerIds, getUsername) {
     const peersHtml = peerIds
-      .map(
-        (id) => `
-          <li class="user-item" data-peer="${this._escapeHtml(id)}" title="Haz clic para llamar">
+      .map((id) => {
+        const displayName = getUsername ? getUsername(id) : id;
+        return `
+          <li class="user-item" data-peer="${this._escapeHtml(id)}" title="Click para llamar">
             <span class="status-dot online"></span>
-            <span class="username">${this._escapeHtml(id)}</span>
+            <span class="username">${this._escapeHtml(displayName)}</span>
+            <span class="peer-id-tip">${this._escapeHtml(id.slice(0, 6))}</span>
           </li>
-        `
-      )
+        `;
+      })
       .join('');
 
     this.userList.innerHTML = `
       <li class="user-item own">
         <span class="status-dot online"></span>
         <span class="username" id="myPeerIdDisplay">${this._escapeHtml(this.myPeerId.textContent || 'Tú')}</span>
+        <span class="peer-id-tip">tú</span>
       </li>
       ${peersHtml}
     `;
@@ -306,20 +321,12 @@ export class UIManager {
     this.userCount.textContent = String(peerIds.length);
   }
 
-  /**
-   * Actualiza el ID propio en la UI.
-   * @param {string} id
-   */
   setMyId(id) {
     this.myPeerId.textContent = id;
     const display = document.getElementById('myPeerIdDisplay');
     if (display) display.textContent = id;
   }
 
-  /**
-   * Muestra un indicador de "hub" en el badge de sala.
-   * @param {boolean} isHub
-   */
   setHubStatus(isHub) {
     const badge = document.querySelector('.current-room-badge');
     if (!badge) return;
@@ -331,36 +338,24 @@ export class UIManager {
         badge.appendChild(hubEl);
       }
       hubEl.textContent = '🖥 Eres el host de la sala';
-    } else {
-      if (hubEl) hubEl.remove();
+    } else if (hubEl) {
+      hubEl.remove();
     }
   }
 
   // ──────── Video ────────
 
-  /**
-   * Muestra el stream local en el video element.
-   * @param {MediaStream|null} stream
-   */
   setLocalStream(stream) {
     this.localVideo.srcObject = stream;
-    if (!stream) {
-      this.localVideo.style.display = 'none';
-    } else {
-      this.localVideo.style.display = 'block';
-    }
+    this.localVideo.style.display = stream ? 'block' : 'none';
   }
 
-  /**
-   * Agrega un video remoto al grid.
-   * @param {string} peerId
-   * @param {MediaStream} stream
-   */
-  addRemoteVideo(peerId, stream) {
-    // Evitar duplicados
+  addRemoteVideo(peerId, stream, displayName) {
     const existing = document.getElementById(`video-${peerId}`);
     if (existing) {
       existing.querySelector('video').srcObject = stream;
+      const label = existing.querySelector('.video-label');
+      if (label) label.textContent = displayName || peerId.slice(0, 8) + '…';
       return;
     }
 
@@ -375,17 +370,14 @@ export class UIManager {
 
     const label = document.createElement('span');
     label.className = 'video-label';
-    label.textContent = peerId.slice(0, 8) + '…';
+    const labelText = displayName || peerId.slice(0, 8) + '…';
+    label.textContent = labelText;
 
     container.appendChild(video);
     container.appendChild(label);
     this.videoGrid.appendChild(container);
   }
 
-  /**
-   * Elimina un video remoto del grid.
-   * @param {string} peerId
-   */
   removeRemoteVideo(peerId) {
     const el = document.getElementById(`video-${peerId}`);
     if (el) {
@@ -395,24 +387,26 @@ export class UIManager {
     }
   }
 
+  updateRemoteVideoLabel(peerId, displayName) {
+    const container = document.getElementById(`video-${peerId}`);
+    if (container) {
+      const label = container.querySelector('.video-label');
+      if (label) label.textContent = displayName || peerId.slice(0, 8) + '…';
+    }
+  }
+
   // ──────── Chat ────────
 
-  /**
-   * Agrega un mensaje al chat.
-   * @param {'own' | 'remote' | 'system'} type
-   * @param {string} sender
-   * @param {string} text
-   */
-  addMessage(type, sender, text) {
+  addMessage(type, sender, text, senderName) {
     const div = document.createElement('div');
     div.className = `message ${type}`;
 
     if (type === 'system') {
       div.innerHTML = `<span class="msg-body">${this._escapeHtml(text)}</span>`;
     } else {
-      const displaySender = type === 'own' ? 'Tú' : sender.slice(0, 8) + '…';
+      const displayName = type === 'own' ? 'Tú' : (senderName || sender.slice(0, 8) + '…');
       div.innerHTML = `
-        <span class="msg-sender">${this._escapeHtml(displaySender)}</span>
+        <span class="msg-sender">${this._escapeHtml(displayName)}</span>
         <span class="msg-body">${this._escapeHtml(text)}</span>
       `;
     }
@@ -423,11 +417,6 @@ export class UIManager {
 
   // ──────── Toast ────────
 
-  /**
-   * Muestra una notificación toast.
-   * @param {string} text
-   * @param {'info' | 'success' | 'error'} type
-   */
   showToast(text, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;

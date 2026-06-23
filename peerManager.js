@@ -41,6 +41,9 @@ export class PeerManager {
     this.localStream = null;
     this.screenStream = null;
 
+    /** @type {Map<string, string>} peerId -> username */
+    this.peerUsernames = new Map();
+
     this.onPeersUpdate = null;
     this.onMessage = null;
     this.onRemoteStream = null;
@@ -48,6 +51,14 @@ export class PeerManager {
     this.onError = null;
     this.onReady = null;
     this.onNewPeer = null;
+  }
+
+  setMyUsername(name) {
+    this.myUsername = name || '';
+  }
+
+  getPeerUsername(peerId) {
+    return this.peerUsernames.get(peerId) || peerId;
   }
 
   /**
@@ -140,10 +151,11 @@ export class PeerManager {
       this._log(`Conectado a ${peerId}`);
       this._notifyPeersUpdate();
 
-      // Handshake: anunciamos nuestra identidad y rol
+      // Handshake: anunciamos nuestra identidad, rol y nombre
       this._send(conn, {
         type: 'peer-info',
         id: this.myId,
+        username: this.myUsername || '',
         room: this.roomId,
         isHub: this.isHub,
       });
@@ -193,6 +205,10 @@ export class PeerManager {
       // Información de handshake — aseguramos conexión bidireccional
       if (!this.peers.has(peerId)) {
         this.connectToPeer(peerId);
+      }
+      // Guardar el username del peer
+      if (data.username) {
+        this.peerUsernames.set(peerId, data.username);
       }
       return;
     }
@@ -271,6 +287,23 @@ export class PeerManager {
    */
   sendMessage(text) {
     const payload = { type: 'message', text };
+    for (const { conn } of this.peers.values()) {
+      this._send(conn, payload);
+    }
+  }
+
+  /**
+   * Reenvía el username actualizado a todos los peers conectados.
+   * @param {string} name
+   */
+  broadcastUsername(name) {
+    const payload = {
+      type: 'peer-info',
+      id: this.myId,
+      username: name,
+      room: this.roomId,
+      isHub: this.isHub,
+    };
     for (const { conn } of this.peers.values()) {
       this._send(conn, payload);
     }

@@ -10,6 +10,7 @@
 const STORAGE_KEYS = {
   ROOMS: 'p2pchat_rooms',
   THEME: 'p2pchat_theme',
+  USERNAME: 'p2pchat_username',
 };
 
 export const StorageManager = {
@@ -63,6 +64,22 @@ export const StorageManager = {
    */
   saveTheme(mode) {
     localStorage.setItem(STORAGE_KEYS.THEME, mode);
+  },
+
+  // ---- Username ----
+
+  /**
+   * @returns {string}
+   */
+  getUsername() {
+    return localStorage.getItem(STORAGE_KEYS.USERNAME) || '';
+  },
+
+  /**
+   * @param {string} name
+   */
+  saveUsername(name) {
+    localStorage.setItem(STORAGE_KEYS.USERNAME, name);
   },
 
   // ---- URL ----

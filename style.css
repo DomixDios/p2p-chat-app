@@ -298,6 +298,72 @@ body {
 .username { overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
 .user-item.own .username { color: var(--accent); }
 
+.peer-id-tip {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ----- Username section ----- */
+.username-section {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.username-section .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.username-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.username-display {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.username-input {
+  display: none;
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  transition: all var(--transition);
+}
+
+.btn-icon:hover {
+  color: var(--accent);
+  background: var(--glass-hover);
+}
+
 .badge {
   background: var(--accent);
   color: #fff;
@@ -569,6 +635,51 @@ body {
   opacity: 1;
 }
 
+/* ----- Mobile Bottom Nav ----- */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  background: var(--bg-secondary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--glass-border);
+  padding: 4px 0 env(safe-area-inset-bottom, 4px) 0;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.mob-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+  font-family: var(--font);
+  font-size: 10px;
+}
+
+.mob-nav-btn.active {
+  color: var(--accent);
+}
+
+.mob-nav-btn svg {
+  transition: all var(--transition);
+}
+
+.mob-nav-btn.active svg {
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+
 /* ============================================================
    RESPONSIVE
    ============================================================ */
@@ -608,9 +719,12 @@ body {
 
   .sidebar-right.open { transform: translateX(0); }
 
+  .mobile-nav { display: flex; }
+
   .main-content {
     padding: 8px;
     padding-top: 56px;
+    padding-bottom: 60px;
     height: 100vh;
   }
 
@@ -619,7 +733,20 @@ body {
   }
 
   .chat-section {
-    height: 180px;
+    height: 160px;
+  }
+
+  .chat-messages {
+    padding: 8px 12px;
+  }
+
+  .chat-input {
+    padding: 8px 12px;
+  }
+
+  .media-controls .ctrl-btn {
+    width: 40px;
+    height: 40px;
   }
 }
 
