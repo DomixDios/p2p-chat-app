@@ -752,11 +752,15 @@ body {
     padding-top: 56px;
     padding-bottom: 60px;
     height: 100vh;
+    overflow-y: auto;
     gap: 4px;
+    -webkit-overflow-scrolling: touch;
   }
 
   .video-grid {
     grid-template-columns: 1fr;
+    min-height: 60px;
+    padding: 2px;
   }
 
   .media-bar {
@@ -778,7 +782,9 @@ body {
   }
 
   .chat-section {
-    height: 160px;
+    height: 30vh;
+    min-height: 120px;
+    max-height: 200px;
   }
 
   .chat-messages {
@@ -787,6 +793,7 @@ body {
 
   .chat-input {
     padding: 8px 12px;
+    flex-shrink: 0;
   }
 }
 
