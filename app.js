@@ -29,13 +29,8 @@ class App {
     }
   }
 
-  /**
-   * Solicita permisos de cámara y micrófono al unirse a una sala.
-   * En navegadores modernos esto abre el diálogo de permisos del navegador.
-   * Requiere contexto seguro (HTTPS o localhost).
-   */
   async _requestMediaPermissions() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       this.ui.showToast('Tu navegador no soporta cámara/micrófono', 'error');
       return;
     }
@@ -43,19 +38,46 @@ class App {
       this.ui.showToast('Usa HTTPS o localhost para cámara/micrófono', 'error');
       return;
     }
+
+    let hasVideo = false, hasAudio = false;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      this.peerManager.localStream = stream;
-      this.ui.setLocalStream(stream);
-      this.isMicActive = true;
-      this.isCamActive = true;
-      this.ui.btnMic.dataset.active = 'true';
-      this.ui.btnCam.dataset.active = 'true';
-      for (const peerId of this.peerManager.getPeerList()) {
-        this.peerManager.callPeer(peerId);
-      }
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      hasVideo = devices.some(d => d.kind === 'videoinput');
+      hasAudio = devices.some(d => d.kind === 'audioinput');
+    } catch {}
+
+    if (!hasVideo && !hasAudio) {
+      this.ui.showToast('No se encontró cámara ni micrófono', 'error');
+      return;
+    }
+
+    const constraints = { audio: hasAudio, video: hasVideo };
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      this._onMediaStream(stream);
     } catch (err) {
-      console.log('Media permissions:', err.message);
+      if (hasAudio) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          this._onMediaStream(stream);
+          this.ui.showToast('Cámara no disponible, solo micrófono activado', 'warning');
+          return;
+        } catch {}
+      }
+      this.ui.showToast(`Error multimedia: ${err.message}`, 'error');
+    }
+  }
+
+  _onMediaStream(stream) {
+    this.peerManager.localStream = stream;
+    this.ui.setLocalStream(stream);
+    if (stream.getAudioTracks().length > 0) {
+      this.isMicActive = true;
+      this.ui.btnMic.dataset.active = 'true';
+    }
+    if (stream.getVideoTracks().length > 0) {
+      this.isCamActive = true;
+      this.ui.btnCam.dataset.active = 'true';
     }
   }
 
@@ -242,7 +264,7 @@ class App {
 
     this.ui.addMessage('system', '', `Te has unido a la sala "${roomId}"`);
 
-    setTimeout(() => this._requestMediaPermissions(), 1000);
+    this._requestMediaPermissions();
   }
 
   _renderRoomList() {
