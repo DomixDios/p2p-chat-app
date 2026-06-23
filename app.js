@@ -29,6 +29,36 @@ class App {
     }
   }
 
+  /**
+   * Solicita permisos de cámara y micrófono al unirse a una sala.
+   * En navegadores modernos esto abre el diálogo de permisos del navegador.
+   * Requiere contexto seguro (HTTPS o localhost).
+   */
+  async _requestMediaPermissions() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      this.ui.showToast('Tu navegador no soporta cámara/micrófono', 'error');
+      return;
+    }
+    if (!window.isSecureContext) {
+      this.ui.showToast('Usa HTTPS o localhost para cámara/micrófono', 'error');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      this.peerManager.localStream = stream;
+      this.ui.setLocalStream(stream);
+      this.isMicActive = true;
+      this.isCamActive = true;
+      this.ui.btnMic.dataset.active = 'true';
+      this.ui.btnCam.dataset.active = 'true';
+      for (const peerId of this.peerManager.getPeerList()) {
+        this.peerManager.callPeer(peerId);
+      }
+    } catch (err) {
+      console.log('Media permissions:', err.message);
+    }
+  }
+
   // ──────── WIRING ────────
 
   _wireUI() {
@@ -211,6 +241,8 @@ class App {
     window.history.replaceState({}, '', url);
 
     this.ui.addMessage('system', '', `Te has unido a la sala "${roomId}"`);
+
+    setTimeout(() => this._requestMediaPermissions(), 1000);
   }
 
   _renderRoomList() {

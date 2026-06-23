@@ -423,12 +423,6 @@ body {
   box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
 }
 
-.ctrl-btn[data-active="true"]:hover {
-  background: var(--danger);
-  border-color: var(--danger);
-  box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
-}
-
 /* ----- Área principal ----- */
 .main-content {
   display: flex;
@@ -759,7 +753,9 @@ body {
 
   .video-grid {
     grid-template-columns: 1fr;
-    min-height: 60px;
+    flex: none;
+    max-height: 200px;
+    min-height: 100px;
     padding: 2px;
   }
 
@@ -782,9 +778,10 @@ body {
   }
 
   .chat-section {
-    height: 30vh;
+    flex: 1;
     min-height: 120px;
-    max-height: 200px;
+    height: auto;
+    overflow: visible;
   }
 
   .chat-messages {
@@ -799,7 +796,6 @@ body {
 
 @media (max-width: 480px) {
   .sidebar { width: 100%; }
-  .video-grid { grid-template-columns: 1fr; }
-  .media-controls { gap: 4px; }
-  .ctrl-btn { width: 40px; height: 40px; }
+  .video-grid { grid-template-columns: 1fr; max-height: 160px; }
+  .ctrl-btn { width: 36px; height: 36px; }
 }
